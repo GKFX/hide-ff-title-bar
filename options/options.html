@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hide Title Bar Options</title>
+  <style>
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <form>
+    <label>Hide title bar when:</label>
+    <select required="true">
+      <option value="always">Always</option>
+      <!--      <option value="maxonly">Maximized</option> -->
+      <option value="never">Never</option>
+    </select>
+  </form>
+
+  <p id="error" class="error hidden">
+  Error
+  </p>
+
+  <p>
+  You'll need to have installed the native helper (a Python script) before the above will work. <button id="install">Go to install page</button>
+  </p>
+
+  <script src="options.js"></script>
+</body>
+</html>

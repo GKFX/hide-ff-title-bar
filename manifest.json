@@ -1,0 +1,29 @@
+{
+  "description": "Hide the title bar, for GNOME.",
+  "manifest_version": 2,
+  "name": "Hide Title Bar",
+  "version": "1.1",
+  "icons": {
+    "48": "icons/pc.svg",
+    "96": "icons/pc.svg"
+  },
+
+  "applications": {
+    "gecko": {
+      "id": "hidetitlebar@gkfx.github.com"
+    }
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "options_ui": {
+    "browser_style": true,
+    "page": "options/options.html"
+  },
+
+  "permissions": [
+    "nativeMessaging", "storage"
+  ]
+}

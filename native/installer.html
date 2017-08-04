@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="chrome://browser/content/extension.css" />
+  <link xmlns="http://www.w3.org/1999/xhtml" rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css" />
+  <title>Hide Title Bar: script installer</title>
+</head>
+<body class="main-content">
+  <div class="panel">
+    <div class="header">
+      <h1 class="header-name">Native script downloads</h1>
+    </div>
+    <p>
+    For security reasons, it seems to be impossible to access the required functionality to hide the title bar from within the Hide Title Bar extension. The native script made available here can be called by Hide Title Bar to carry out the task, and should then immediately terminate. All of the files from under <em>one heading only</em> are needed.
+    </p>
+    <h2>System-wide installation, for Debian-like systems.</h2>
+    <p>
+    Install this file with your package manager, which should bring in all prequisites.
+    </p>
+    <form action="hide-title-bar-for-firefox.deb" method="get">
+      <label><code>.deb</code> package</label>
+      <button type="submit" class="default">Download</button>
+    </form>
+    <h2>Manual installation.</h2>
+    <p>
+    This is for single-user installations, and for systems not using a Debian-style package manager.
+    </p>
+    <form action="native.py" method="get">
+      <label>Python script:</label>
+      <button type="submit">Download</button>
+    </form>
+    <form action="native.py" method="get">
+      <label>Native manifest:</label>
+      <button type="submit">Download</button>
+    </form>
+  </div>
+</body>
+</html>
