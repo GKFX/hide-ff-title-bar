@@ -71,4 +71,5 @@ form > div > button {
 
   form > div:not(.small) > :nth-child(3) {
     align-self: stretch;
+  }
 }
