@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <link rel="stylesheet" href="chrome://browser/content/extension.css" />
   <link xmlns="http://www.w3.org/1999/xhtml" rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css" />
+  <link rel="stylesheet" href="installer.css" />
   <title>Hide Title Bar: script installer</title>
 </head>
 <body class="main-content">
@@ -11,28 +13,57 @@
       <h1 class="header-name">Native script downloads</h1>
     </div>
     <p>
-    For security reasons, it seems to be impossible to access the required functionality to hide the title bar from within the Hide Title Bar extension. The native script made available here can be called by Hide Title Bar to carry out the task, and should then immediately terminate. All of the files from under <em>one heading only</em> are needed.
-    </p>
-    <h2>System-wide installation, for Debian-like systems.</h2>
+    For security reasons, it seems to be impossible to access the required functionality to hide the title bar from within the Hide Title Bar extension. The native script made available here can be called by Hide Title Bar to carry out the task, and should then immediately terminate. All of the files from under <em>one heading only</em> are needed.</p>
+
     <p>
-    Install this file with your package manager, which should bring in all prequisites.
+    The native script is designed for Linux only, with GTK 3. <strong>It will not work on Windows or Mac OS.</strong>
     </p>
     <form action="hide-title-bar-for-firefox.deb" method="get">
+      <h2>System-wide installation, for Debian-like systems.</h2>
+      <p>
+      Install this file with your package manager, which should bring in all prequisites.
+      </p>
+      <div class="small">
       <label><code>.deb</code> package</label>
       <button type="submit" class="default">Download</button>
+      </div>
+      <p>
+      The package name is <code>hide-ff-title-bar</code>; to uninstall the native script, use your package manager to remove this package.
+      </p>
     </form>
-    <h2>Manual installation.</h2>
-    <p>
-    This is for single-user installations, and for systems not using a Debian-style package manager.
-    </p>
-    <form action="native.py" method="get">
-      <label>Python script:</label>
-      <button type="submit">Download</button>
+
+    <form id="manual-form">
+      <h2>Manual installation.</h2>
+      <p>
+      This is for single-user installations, and for systems not using a Debian-style package manager.
+      </p>
+
+      <p>Download this Python script first. It will need to be given the executable bit. Write down the location you save it in the field below, as an absolute path.</p>
+
+      <div class="small"><label>Python script:</label>
+        <button type="submit" formaction="native.py" formmethod="get">Download</button></div>
+
+      <div><label>Installed location of Python script:</label>
+        <input type="text" id="location" pattern="\/[^\0]*[^\/]"></input>
+        <span>Please enter the valid, absolute path to where you saved the file.</span></div>
+
+      <p>This is used to create the manifest. Then save the manifest as one of:</p>
+      <ul>
+        <li><code>/usr/lib/mozilla/native-messaging-hosts/hide_title_bar.json</code> (system-wide)</li>
+        <li><code>/usr/lib64/mozilla/native-messaging-hosts/hide_title_bar.json</code> (system-wide)</li>
+        <li><code>~/.mozilla/native-messaging-hosts/hide_title_bar.json</code> (per user)</li>
+      </ul>
+
+      <div class="small"><label>Native manifest:</label>
+        <button type="submit" id="manifest-download" disabled>Download</button>
+        <a style="display: none" id="manifest-a" download="hide_title_bar.json"></a></div>
+
+      <p>
+      To uninstall, just delete the files you saved.
+      </p>
     </form>
-    <form action="native.py" method="get">
-      <label>Native manifest:</label>
-      <button type="submit">Download</button>
-    </form>
+
+    <script src="installer.js"></script>
   </div>
 </body>
 </html>

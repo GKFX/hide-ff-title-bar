@@ -1,0 +1,68 @@
+input#location:not(:invalid) + span,
+input#location:focus         + span {
+  display: none;
+}
+
+input#location + span {
+  display: block;
+  color: hsl(10, 70%, 30%);
+}
+
+form {
+  display: flex;
+  flex-flow: column;
+}
+
+form > * {
+  margin: 0.2em;
+}
+
+form > div {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+}
+
+form > div > :not(button) {
+  flex-grow: 1;
+  flex-shrink: 0;
+  flex-basis: 50%;
+  max-width: 50%;
+  margin: 0;
+}
+
+form > div > button {
+  flex: none;
+  margin: 0;
+}
+
+@media (max-width: 50em) {
+  form > div.small {
+    justify-content: space-between;
+  }
+
+  form > div:not(.small) {
+    flex-flow: column nowrap;
+  }
+
+  form > div:not(.small) > * {
+    flex: 1 0 auto;
+    width: 90%;
+    max-width: unset;
+  }
+  form > div.small > * {
+    flex: none;
+    max-width: unset;
+  }
+
+  form > div:not(.small) > :nth-child(1) {
+    align-self: flex-start;
+  }
+
+  form > div:not(.small) > :nth-child(2) {
+    align-self: flex-end;
+  }
+
+  form > div:not(.small) > :nth-child(3) {
+    align-self: stretch;
+}

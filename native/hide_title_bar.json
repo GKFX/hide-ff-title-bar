@@ -1,7 +1,7 @@
 {
   "name": "hide_title_bar",
   "description": "Hide the Firefox title bar, using GTK",
-  "path": "/opt/bateman-hide-title-bar/native.py",
+  "path": "/opt/hide-ff-title-bar/native.py",
   "type": "stdio",
   "allowed_extensions": ["hidetitlebar@gkfx.github.com"]
 }
