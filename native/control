@@ -4,6 +4,6 @@ Section: web
 Priority: optional
 Architecture: all
 Maintainer: George Bateman <george.bateman16@gmail.com>
-Depends: python3-minimal (>= 3.5), libpython3-stdlib (>= 3.5), python-gi, gir1.2-gtk-3.0
+Depends: python3-minimal (>= 3.5), libpython3-stdlib (>= 3.5), python-gi, gir1.2-gtk-3.0, wmctrl
 Description: Native script for Hide Title Bar extension for Firefox.
  Python script and manifest to be used by the extension.
