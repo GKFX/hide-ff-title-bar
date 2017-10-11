@@ -26,4 +26,7 @@ dpkg-deb --build ${TMPFILE} native/hide-title-bar-for-firefox.deb
 rm -rf ${TMPFILE}
 
 heading "Building WebExtension"
-web-ext build
+# Files not distributed:
+ # Build script is provided to reviewers separately
+ # native/control gets put into the .deb without modification
+web-ext build --ignore-files build.sh native/control
