@@ -7,10 +7,21 @@
 function doNative(whenToHideTitleBar) {
   browser.runtime.sendNativeMessage("hide_title_bar",
     {whenToHideTitleBar: whenToHideTitleBar}).then(response => {
-      if (response !== true) {
-        console.log("Hide title bar native error: " + response)
+      if ("okay" in response && response.okay) {
+        browser.storage.local.set({errorText: "NO_ERROR"});
+      } else if ("knownFailure" in response) {
+        browser.storage.local.set({errorText: "KNOWN_FAILURE:" + response.knownFailure});
+      } else if ("unknownFailure" in response) {
+        browser.storage.local.set({errorText: "UNKNOWN_FAILURE:" + response.unknownFailure});
+      } else {
+        browser.storage.local.set({errorText: "RESPONSE_NOT_UNDERSTOOD:" +
+          JSON.stringify(response));
+        console.log(response);
       }
-    },  failure => console.log(failure));
+    },  failure => {
+      browser.storage.local.set({errorText: "NO_RESPONSE"});
+      console.log(failure);
+    });
 }
 
 browser.storage.local.get({ whenToHideTitleBar: "always" }).then(

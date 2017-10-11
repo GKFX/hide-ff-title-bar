@@ -27,6 +27,12 @@ var error = document.querySelector("#error");
 browser.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") return;
   if ("errorText" in changes) {
-    error.innerText = changes.errorText.newValue;
+    if (changes.errorText.newValue == "NO_ERROR") {
+      error.classList.add("hidden");
+      error.innerText = "";
+    } else {
+      error.classList.remove("hidden");
+      error.innerText = changes.errorText.newValue;
+    }
   }
 });
