@@ -38,6 +38,10 @@ try:
 
   import gi
   gi.require_version('Gdk', '3.0')
+
+  import gi.module
+  gi.module.get_introspection_module('Gdk').set_allowed_backends('x11')
+
   from gi.repository import Gdk, GdkX11
 
   gdk_display = GdkX11.X11Display.get_default()
