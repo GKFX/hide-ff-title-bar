@@ -17,7 +17,9 @@ from subprocess import DEVNULL, PIPE, CalledProcessError, run
 from sys import stdin, stdout, stderr, exit
 
 from gi import require_version
+require_version('Gdk', '3.0')
 from gi.module import get_introspection_module
+get_introspection_module('Gdk').set_allowed_backends('x11')
 from gi.repository import Gdk, GdkX11
 
 
@@ -131,8 +133,6 @@ def hide_title_bar():
     except EmptyMessage:
         exit(0)
 
-    require_version('Gdk', '3.0')
-    get_introspection_module('Gdk').set_allowed_backends('x11')
     decoration = None
     when_to_hide_title_bar = WhenToHideTitleBar.from_message(received)
 
