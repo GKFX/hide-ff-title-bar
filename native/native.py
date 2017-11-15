@@ -9,6 +9,7 @@
 
 from collections import namedtuple
 from contextlib import suppress
+from datetime import datetime
 from enum import Enum
 from json import loads, dumps
 from os import linesep
@@ -24,6 +25,12 @@ from gi.repository import Gdk, GdkX11
 PROC_NAME = 'firefox'
 
 Window = namedtuple('Window', ('id', 'desktop', 'pid', 'machine', 'title'))
+
+
+def debug(msg):
+
+    with open('/tmp/hide-ff-title-bar.debug', 'a') as file:
+        file.write('[{}] {}{}'.format(datetime.now(), msg, linesep))
 
 
 def window_from_string(string):
@@ -92,7 +99,7 @@ def get_message():
         exit(0)
 
     length, *_ = unpack('@I', raw_length)
-    message = stdin.buffer.read(length).decode('utf-8')
+    message = stdin.read(length)
     return loads(message)
 
 
@@ -101,9 +108,9 @@ def send_message(content):
 
     string = dumps(content)
     length = pack('@I', len(string))
-    stdout.write(length)
-    stdout.write(string.encode('utf-8'))
-    stdout.flush()
+    stdout.buffer.write(length)
+    stdout.buffer.write(string.encode('utf-8'))
+    stdout.buffer.flush()
 
 
 class WhenToHideTitleBar(Enum):
@@ -150,23 +157,30 @@ def hide_title_bar():
     """Main function to hide firefox's title bar."""
 
     received = get_message()
-    when_to_hide_title_bar = WhenToHideTitleBar.from_message(received)
+    debug(str(received))
     require_version('Gdk', '3.0')
     get_introspection_module('Gdk').set_allowed_backends('x11')
+    decoration = None
+    when_to_hide_title_bar = WhenToHideTitleBar.from_message(received)
 
-    for window in windows_by_procname(PROC_NAME):
-        if when_to_hide_title_bar == WhenToHideTitleBar.ALWAYS:
-            decorate_window(window, Gdk.WMDecoration.BORDER)
-            send_message({'okay': 'true'})
-        elif when_to_hide_title_bar == WhenToHideTitleBar.MAX_ONLY:
-            send_message({"knownFailure": "MAX_ONLY_UNSUPPORTED"})
-        elif when_to_hide_title_bar == WhenToHideTitleBar.NEVER:
-            decorate_window(window, Gdk.WMDecoration.BORDER)
-            send_message({'okay': 'true'})
-        else:
-            send_message({'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'})
+    if when_to_hide_title_bar == WhenToHideTitleBar.ALWAYS:
+        decoration = Gdk.WMDecoration.BORDER
+        reply = {'okay': 'true'}
+    elif when_to_hide_title_bar == WhenToHideTitleBar.MAX_ONLY:
+        reply = {"knownFailure": "MAX_ONLY_UNSUPPORTED"}
+    elif when_to_hide_title_bar == WhenToHideTitleBar.NEVER:
+        decoration = Gdk.WMDecoration.ALL
+        reply = {'okay': 'true'}
+    else:
+        reply = {'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'}
 
-    stderr.write(dumps(received, indent=2, sort_keys=True))
+    if decoration is not None:
+        for window in windows_by_procname(PROC_NAME):
+            debug('Decorating window: {}.'.format(window))
+            decorate_window(window, decoration)
+
+    send_message(reply)
+    print(dumps(received, indent=2, sort_keys=True), file=stderr)
 
 
 if __name__ == '__main__':
