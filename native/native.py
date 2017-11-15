@@ -114,10 +114,6 @@ class WhenToHideTitleBar(Enum):
     NEVER = 'never'
     UNKNOWN = None
 
-    def __str__(self):
-        """Returns the enumeration's string value."""
-        return str(self.value)
-
     @classmethod
     def from_message(cls, msg):
         """Returns the respective enumeration
@@ -129,7 +125,7 @@ class WhenToHideTitleBar(Enum):
             return cls.UNKNOWN
 
         for enumeration in cls:
-            if str(enumeration) == value:
+            if enumeration.vaue == value:
                 return enumeration
 
         return cls.UNKNOWN
