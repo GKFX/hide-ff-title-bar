@@ -26,6 +26,12 @@ PROC_NAME = 'firefox'
 Window = namedtuple('Window', ('id', 'desktop', 'pid', 'machine', 'title'))
 
 
+class EmptyMessage(Exception):
+    """Indicates that a message of size zero was received on stdin."""
+
+    pass
+
+
 def window_from_string(string):
     """Loads the window named tuple from the respective string."""
 
@@ -89,7 +95,7 @@ def get_message():
     raw_length = stdin.buffer.read(4)
 
     if not raw_length:
-        exit(0)
+        raise EmptyMessage()
 
     length, *_ = unpack('@I', raw_length)
     message = stdin.read(length)
@@ -104,6 +110,49 @@ def send_message(content):
     stdout.buffer.write(length)
     stdout.buffer.write(string.encode('utf-8'))
     stdout.buffer.flush()
+
+
+def decorate_window(window, decoration):
+    """Decorates the respective window using Gdk."""
+
+    gdk_display = GdkX11.X11Display.get_default()
+    Gdk.Window.process_all_updates()
+    gdk_window = GdkX11.X11Window.foreign_new_for_display(
+        gdk_display, window.id)
+    Gdk.Window.set_decorations(gdk_window, decoration)
+    Gdk.Window.process_all_updates()
+
+
+def hide_title_bar():
+    """Main function to hide firefox's title bar."""
+
+    try:
+        received = get_message()
+    except EmptyMessage:
+        exit(0)
+
+    require_version('Gdk', '3.0')
+    get_introspection_module('Gdk').set_allowed_backends('x11')
+    decoration = None
+    when_to_hide_title_bar = WhenToHideTitleBar.from_message(received)
+
+    if when_to_hide_title_bar == WhenToHideTitleBar.ALWAYS:
+        decoration = Gdk.WMDecoration.BORDER
+        reply = {'okay': True}
+    elif when_to_hide_title_bar == WhenToHideTitleBar.MAX_ONLY:
+        reply = {"knownFailure": "MAX_ONLY_UNSUPPORTED"}
+    elif when_to_hide_title_bar == WhenToHideTitleBar.NEVER:
+        decoration = Gdk.WMDecoration.ALL
+        reply = {'okay': True}
+    else:
+        reply = {'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'}
+
+    if decoration is not None:
+        for window in windows_by_procname(PROC_NAME):
+            decorate_window(window, decoration)
+
+    send_message(reply)
+    print(dumps(received, indent=2, sort_keys=True), file=stderr)
 
 
 class WhenToHideTitleBar(Enum):
@@ -129,45 +178,6 @@ class WhenToHideTitleBar(Enum):
                 return enumeration
 
         return cls.UNKNOWN
-
-
-def decorate_window(window, decoration):
-    """Decorates the respective window using Gdk."""
-
-    gdk_display = GdkX11.X11Display.get_default()
-    Gdk.Window.process_all_updates()
-    gdk_window = GdkX11.X11Window.foreign_new_for_display(
-        gdk_display, window.id)
-    Gdk.Window.set_decorations(gdk_window, decoration)
-    Gdk.Window.process_all_updates()
-
-
-def hide_title_bar():
-    """Main function to hide firefox's title bar."""
-
-    received = get_message()
-    require_version('Gdk', '3.0')
-    get_introspection_module('Gdk').set_allowed_backends('x11')
-    decoration = None
-    when_to_hide_title_bar = WhenToHideTitleBar.from_message(received)
-
-    if when_to_hide_title_bar == WhenToHideTitleBar.ALWAYS:
-        decoration = Gdk.WMDecoration.BORDER
-        reply = {'okay': True}
-    elif when_to_hide_title_bar == WhenToHideTitleBar.MAX_ONLY:
-        reply = {"knownFailure": "MAX_ONLY_UNSUPPORTED"}
-    elif when_to_hide_title_bar == WhenToHideTitleBar.NEVER:
-        decoration = Gdk.WMDecoration.ALL
-        reply = {'okay': True}
-    else:
-        reply = {'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'}
-
-    if decoration is not None:
-        for window in windows_by_procname(PROC_NAME):
-            decorate_window(window, decoration)
-
-    send_message(reply)
-    print(dumps(received, indent=2, sort_keys=True), file=stderr)
 
 
 if __name__ == '__main__':
