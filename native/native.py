@@ -157,12 +157,12 @@ def hide_title_bar():
 
     if when_to_hide_title_bar == WhenToHideTitleBar.ALWAYS:
         decoration = Gdk.WMDecoration.BORDER
-        reply = {'okay': 'true'}
+        reply = {'okay': True}
     elif when_to_hide_title_bar == WhenToHideTitleBar.MAX_ONLY:
         reply = {"knownFailure": "MAX_ONLY_UNSUPPORTED"}
     elif when_to_hide_title_bar == WhenToHideTitleBar.NEVER:
         decoration = Gdk.WMDecoration.ALL
-        reply = {'okay': 'true'}
+        reply = {'okay': True}
     else:
         reply = {'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'}
 
