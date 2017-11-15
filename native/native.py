@@ -5,65 +5,169 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 #
+"""Hides firefox's title bar."""
 
-import json
-import os
-import struct
-import sys
+from collections import namedtuple
+from contextlib import suppress
+from enum import Enum
+from json import loads, dumps
+from os import linesep
+from struct import pack, unpack
+from subprocess import DEVNULL, PIPE, CalledProcessError, run
+from sys import stdin, stdout, stderr, exit
 
-stdout = os.fdopen(sys.stdout.fileno(), 'wb')
-
-def getMessage():
-  rawLength = sys.stdin.buffer.read(4)
-  if len(rawLength) == 0:
-    sys.exit(0)
-  messageLength = struct.unpack('@I', rawLength)[0]
-  message = sys.stdin.buffer.read(messageLength).decode('utf-8')
-  return json.loads(message)
-
-def sendMessage(messageContent):
-  encodedContent = json.dumps(messageContent)
-  encodedLength = struct.pack('@I', len(encodedContent))
-  stdout.write(encodedLength)
-  stdout.write(encodedContent.encode('utf-8'))
-  stdout.flush()
-
-received = getMessage()
-sys.stderr.write(json.dumps(received, indent=2, sort_keys=True))
+from gi import require_version
+from gi.module import get_introspection_module
+from gi.repository import Gdk, GdkX11
 
 
-try:
-  import subprocess
-  ffPid = int(subprocess.run(["bash", "-c", "wmctrl -lp | grep -Fh $(pgrep firefox | head -n 1) -- -"], universal_newlines=True, stdout=subprocess.PIPE).stdout.split()[0], 0)
+PROC_NAME = 'firefox'
 
-  import gi
-  gi.require_version('Gdk', '3.0')
+Window = namedtuple('Window', ('id', 'desktop', 'pid', 'machine', 'title'))
 
-  import gi.module
-  gi.module.get_introspection_module('Gdk').set_allowed_backends('x11')
 
-  from gi.repository import Gdk, GdkX11
+def window_from_string(string):
+    """Loads the window named tuple from the respective string."""
 
-  gdk_display = GdkX11.X11Display.get_default()
-  Gdk.Window.process_all_updates()
-  gdk_window = GdkX11.X11Window.foreign_new_for_display(gdk_display, ffPid)
+    id_, desktop, pid, machine, *title = filter(None, string.split())
+    return Window(int(id_, 16), int(desktop), int(pid), machine, ' '.join(title))
 
-  if received["whenToHideTitleBar"] == "always":
-    Gdk.Window.set_decorations(gdk_window, Gdk.WMDecoration.BORDER)
+
+def get_windows():
+    """Yields windows using "wmctrl"."""
+
+    completed_process = run(('wmctrl', '-lp'), stdout=PIPE, stderr=DEVNULL)
+
+    try:
+        completed_process.check_returncode()
+    except CalledProcessError:
+        raise StopIteration() from None
+
+    try:
+        text = completed_process.stdout.decode()
+    except UnicodeDecodeError:
+        raise StopIteration() from None
+
+    for line in filter(None, text.split(linesep)):
+        with suppress(TypeError, ValueError):
+            yield window_from_string(line)
+
+
+def get_pids(proc_name):
+    """Gets PID of the respective process by invoking "pidof"."""
+
+    completed_process = run(('pidof', proc_name), stdout=PIPE, stderr=DEVNULL)
+
+    try:
+        completed_process.check_returncode()
+    except CalledProcessError:
+        raise StopIteration() from None
+
+    try:
+        text = completed_process.stdout.decode()
+    except UnicodeDecodeError:
+        raise StopIteration() from None
+
+    for pid in filter(None, text.split()):
+        with suppress(ValueError):
+            yield int(pid)
+
+
+def windows_by_procname(proc_name):
+    """Yields windows by process name."""
+
+    pids = tuple(get_pids(proc_name))
+
+    for window in get_windows():
+        if window.pid in pids:
+            yield window
+
+
+def get_message():
+    """Reads a JSON-ish message of a certain length."""
+
+    raw_length = stdin.buffer.read(4)
+
+    if not raw_length:
+        exit(0)
+
+    length, *_ = unpack('@I', raw_length)
+    message = stdin.buffer.read(length).decode('utf-8')
+    return loads(message)
+
+
+def send_message(content):
+    """Sends a JSON-ish message with content length header."""
+
+    string = dumps(content)
+    length = pack('@I', len(string))
+    stdout.write(length)
+    stdout.write(string.encode('utf-8'))
+    stdout.flush()
+
+
+class WhenToHideTitleBar(Enum):
+    """When to hide title bar options."""
+
+    ALWAYS = 'always'
+    MAX_ONLY = 'maxonly'
+    NEVER = 'never'
+    UNKNOWN = None
+
+    def __str__(self):
+        """Returns the enumeration's string value."""
+        return str(self.value)
+
+    @classmethod
+    def from_message(cls, msg):
+        """Returns the respective enumeration
+        value from the provided message.
+        """
+        try:
+            value = msg["whenToHideTitleBar"]
+        except KeyError:
+            return cls.UNKNOWN
+
+        for enumeration in cls:
+            if str(enumeration) == value:
+                return enumeration
+
+        return cls.UNKNOWN
+
+
+def decorate_window(window, decoration):
+    """Decorates the respective window using Gdk."""
+
+    gdk_display = GdkX11.X11Display.get_default()
     Gdk.Window.process_all_updates()
-    sendMessage({"okay": true})
-
-  elif received["whenToHideTitleBar"] == "maxonly":
-    sendMessage({"knownFailure": "MAX_ONLY_UNSUPPORTED"});
-
-  elif received["whenToHideTitleBar"] == "never":
-    Gdk.Window.set_decorations(gdk_window, Gdk.WMDecoration.ALL)
+    gdk_window = GdkX11.X11Window.foreign_new_for_display(
+        gdk_display, window.id)
+    Gdk.Window.set_decorations(gdk_window, decoration)
     Gdk.Window.process_all_updates()
-    sendMessage({"okay": true})
 
-  else:
-    sendMessage({"knownFailure": "UNKNOWN_WHEN_TO_HIDE"})
 
-except BaseException as e:
-  sendMessage({"unknownFailure": str(e)})
-  raise
+def hide_title_bar():
+    """Main function to hide firefox's title bar."""
+
+    received = get_message()
+    when_to_hide_title_bar = WhenToHideTitleBar.from_message(received)
+    require_version('Gdk', '3.0')
+    get_introspection_module('Gdk').set_allowed_backends('x11')
+
+    for window in windows_by_procname(PROC_NAME):
+        if when_to_hide_title_bar == WhenToHideTitleBar.ALWAYS:
+            decorate_window(window, Gdk.WMDecoration.BORDER)
+            send_message({'okay': 'true'})
+        elif when_to_hide_title_bar == WhenToHideTitleBar.MAX_ONLY:
+            send_message({"knownFailure": "MAX_ONLY_UNSUPPORTED"})
+        elif when_to_hide_title_bar == WhenToHideTitleBar.NEVER:
+            decorate_window(window, Gdk.WMDecoration.BORDER)
+            send_message({'okay': 'true'})
+        else:
+            send_message({'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'})
+
+    stderr.write(dumps(received, indent=2, sort_keys=True))
+
+
+if __name__ == '__main__':
+    hide_title_bar()
