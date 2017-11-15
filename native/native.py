@@ -125,7 +125,7 @@ class WhenToHideTitleBar(Enum):
             return cls.UNKNOWN
 
         for enumeration in cls:
-            if enumeration.vaue == value:
+            if enumeration.value == value:
                 return enumeration
 
         return cls.UNKNOWN
