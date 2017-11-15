@@ -125,33 +125,46 @@ def decorate_window(window, decoration):
     Gdk.Window.process_all_updates()
 
 
-def hide_title_bar():
-    """Main function to hide firefox's title bar."""
+def hide_title_bar(proc_name, when_to_hide_title_bar):
+    """Conditionally hide title bar of the respective process."""
+
+    result = None
+    decoration = None
+
+    if when_to_hide_title_bar == WhenToHideTitleBar.ALWAYS:
+        decoration = Gdk.WMDecoration.BORDER
+        result = True
+    elif when_to_hide_title_bar == WhenToHideTitleBar.MAX_ONLY:
+        result = False
+    elif when_to_hide_title_bar == WhenToHideTitleBar.NEVER:
+        decoration = Gdk.WMDecoration.ALL
+        result = True
+
+    if decoration is not None:
+        for window in windows_by_procname(proc_name):
+            decorate_window(window, decoration)
+
+    return result
+
+
+def main():
+    """Main function to communicate via native API."""
 
     try:
         received = get_message()
     except EmptyMessage:
         exit(0)
 
-    decoration = None
     when_to_hide_title_bar = WhenToHideTitleBar.from_message(received)
+    result = hide_title_bar(PROC_NAME, when_to_hide_title_bar)
 
-    if when_to_hide_title_bar == WhenToHideTitleBar.ALWAYS:
-        decoration = Gdk.WMDecoration.BORDER
-        reply = {'okay': True}
-    elif when_to_hide_title_bar == WhenToHideTitleBar.MAX_ONLY:
-        reply = {"knownFailure": "MAX_ONLY_UNSUPPORTED"}
-    elif when_to_hide_title_bar == WhenToHideTitleBar.NEVER:
-        decoration = Gdk.WMDecoration.ALL
-        reply = {'okay': True}
+    if result is None:
+        send_message({'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'})
+    elif result:
+        send_message({'okay': True})
     else:
-        reply = {'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'}
+        send_message({"knownFailure": "MAX_ONLY_UNSUPPORTED"})
 
-    if decoration is not None:
-        for window in windows_by_procname(PROC_NAME):
-            decorate_window(window, decoration)
-
-    send_message(reply)
     print(dumps(received, indent=2, sort_keys=True), file=stderr)
 
 
@@ -181,4 +194,4 @@ class WhenToHideTitleBar(Enum):
 
 
 if __name__ == '__main__':
-    hide_title_bar()
+    main()
