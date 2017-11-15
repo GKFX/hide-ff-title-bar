@@ -9,7 +9,6 @@
 
 from collections import namedtuple
 from contextlib import suppress
-from datetime import datetime
 from enum import Enum
 from json import loads, dumps
 from os import linesep
@@ -25,13 +24,6 @@ from gi.repository import Gdk, GdkX11
 PROC_NAME = 'firefox'
 
 Window = namedtuple('Window', ('id', 'desktop', 'pid', 'machine', 'title'))
-
-
-def debug(msg):
-    """Writes a debug message."""
-
-    with open('/tmp/hide-ff-title-bar.debug', 'a') as file:
-        file.write('[{}] {}{}'.format(datetime.now(), msg, linesep))
 
 
 def window_from_string(string):
@@ -158,7 +150,6 @@ def hide_title_bar():
     """Main function to hide firefox's title bar."""
 
     received = get_message()
-    debug(str(received))
     require_version('Gdk', '3.0')
     get_introspection_module('Gdk').set_allowed_backends('x11')
     decoration = None
@@ -177,7 +168,6 @@ def hide_title_bar():
 
     if decoration is not None:
         for window in windows_by_procname(PROC_NAME):
-            debug('Decorating window: {}.'.format(window))
             decorate_window(window, decoration)
 
     send_message(reply)
