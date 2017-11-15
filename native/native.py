@@ -28,6 +28,7 @@ Window = namedtuple('Window', ('id', 'desktop', 'pid', 'machine', 'title'))
 
 
 def debug(msg):
+    """Writes a debug message."""
 
     with open('/tmp/hide-ff-title-bar.debug', 'a') as file:
         file.write('[{}] {}{}'.format(datetime.now(), msg, linesep))
