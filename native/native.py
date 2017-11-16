@@ -9,12 +9,13 @@
 
 from collections import namedtuple
 from contextlib import suppress
+from datetime import datetime
 from enum import Enum
 from json import loads, dumps
 from os import linesep
 from struct import pack, unpack
 from subprocess import DEVNULL, PIPE, CalledProcessError, run
-from sys import stdin, stdout, stderr, exit
+from sys import stdin, stdout, exit
 
 from gi import require_version
 require_version('Gdk', '3.0')
@@ -24,6 +25,8 @@ from gi.repository import Gdk, GdkX11
 
 
 PROC_NAME = 'firefox'
+LOGFILE = '/tmp/hide-ff-title-bar.log'
+LOGGING = False      # Enable for debugging only!
 
 Window = namedtuple('Window', ('id', 'desktop', 'pid', 'machine', 'title'))
 
@@ -32,6 +35,15 @@ class EmptyMessage(Exception):
     """Indicates that a message of size zero was received on stdin."""
 
     pass
+
+
+def log(msg):
+    """Writes log messages to LOGFILE iff LOGGING is True."""
+
+    if LOGGING:
+        with suppress(OSError):
+            with open(LOGFILE, 'a') as file:
+                file.write('[{}] {}{}'.format(datetime.now(), msg, linesep))
 
 
 def window_from_string(string):
@@ -142,6 +154,7 @@ def hide_title_bar(proc_name, when_to_hide_title_bar):
 
     if decoration is not None:
         for window in windows_by_procname(proc_name):
+            log('Decorating window: {}'.format(window))
             decorate_window(window, decoration)
 
     return result
@@ -150,22 +163,28 @@ def hide_title_bar(proc_name, when_to_hide_title_bar):
 def main():
     """Main function to communicate via native API."""
 
+    log('Starting...')
+
     try:
-        received = get_message()
+        message = get_message()
     except EmptyMessage:
+        log('Exiting on empty message...')
         exit(0)
 
-    when_to_hide_title_bar = WhenToHideTitleBar.from_message(received)
+    log('Received message: {}'.format(dumps(message)))
+    when_to_hide_title_bar = WhenToHideTitleBar.from_message(message)
     result = hide_title_bar(PROC_NAME, when_to_hide_title_bar)
 
     if result is None:
-        send_message({'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'})
+        reply = {'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'}
     elif result:
-        send_message({'okay': True})
+        reply = {'okay': True}
     else:
-        send_message({"knownFailure": "MAX_ONLY_UNSUPPORTED"})
+        reply = {"knownFailure": "MAX_ONLY_UNSUPPORTED"}
 
-    print(dumps(received, indent=2, sort_keys=True), file=stderr)
+    log('Sending reply: {}'.format(dumps(reply)))
+    send_message(reply)
+    log('Finished...')
 
 
 class WhenToHideTitleBar(Enum):
