@@ -14,7 +14,7 @@ from enum import Enum
 from json import loads, dumps
 from os import linesep
 from struct import pack, unpack
-from subprocess import DEVNULL, PIPE, CalledProcessError, run
+from subprocess import DEVNULL, CalledProcessError, check_output
 from sys import stdin, stdout, exit
 
 from gi import require_version
@@ -56,17 +56,7 @@ def window_from_string(string):
 def get_windows():
     """Yields windows using "wmctrl"."""
 
-    completed_process = run(('wmctrl', '-lp'), stdout=PIPE, stderr=DEVNULL)
-
-    try:
-        completed_process.check_returncode()
-    except CalledProcessError:
-        raise StopIteration() from None
-
-    try:
-        text = completed_process.stdout.decode()
-    except UnicodeDecodeError:
-        raise StopIteration() from None
+    text = check_output(('wmctrl', '-lp'), stderr=DEVNULL).decode()
 
     for line in filter(None, text.split(linesep)):
         with suppress(TypeError, ValueError):
@@ -76,17 +66,7 @@ def get_windows():
 def get_pids(proc_name):
     """Gets PID of the respective process by invoking "pidof"."""
 
-    completed_process = run(('pidof', proc_name), stdout=PIPE, stderr=DEVNULL)
-
-    try:
-        completed_process.check_returncode()
-    except CalledProcessError:
-        raise StopIteration() from None
-
-    try:
-        text = completed_process.stdout.decode()
-    except UnicodeDecodeError:
-        raise StopIteration() from None
+    text = check_output(('pidof', proc_name), stderr=DEVNULL).decode()
 
     for pid in filter(None, text.split()):
         with suppress(ValueError):
@@ -154,7 +134,7 @@ def hide_title_bar(proc_name, when_to_hide_title_bar):
 
     if decoration is not None:
         for window in windows_by_procname(proc_name):
-            log('Decorating window: {}'.format(window))
+            log('Decorating window: {} with {}.'.format(window, decoration))
             decorate_window(window, decoration)
 
     return result
@@ -173,7 +153,18 @@ def main():
 
     log('Received message: {}'.format(dumps(message)))
     when_to_hide_title_bar = WhenToHideTitleBar.from_message(message)
-    result = hide_title_bar(PROC_NAME, when_to_hide_title_bar)
+
+    try:
+        result = hide_title_bar(PROC_NAME, when_to_hide_title_bar)
+    except FileNotFoundError as file_not_found_error:
+        log(file_not_found_error)
+        exit(1)
+    except CalledProcessError as called_process_error:
+        log(called_process_error)
+        exit(2)
+    except UnicodeDecodeError as unicode_decode_error:
+        log(unicode_decode_error)
+        exit(3)
 
     if result is None:
         reply = {'knownFailure': 'UNKNOWN_WHEN_TO_HIDE'}
