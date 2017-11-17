@@ -51,7 +51,7 @@ try:
   if received["whenToHideTitleBar"] == "always":
     Gdk.Window.set_decorations(gdk_window, Gdk.WMDecoration.BORDER)
     Gdk.Window.process_all_updates()
-    sendMessage({"okay": true})
+    sendMessage({"okay": True})
 
   elif received["whenToHideTitleBar"] == "maxonly":
     sendMessage({"knownFailure": "MAX_ONLY_UNSUPPORTED"});
@@ -59,7 +59,7 @@ try:
   elif received["whenToHideTitleBar"] == "never":
     Gdk.Window.set_decorations(gdk_window, Gdk.WMDecoration.ALL)
     Gdk.Window.process_all_updates()
-    sendMessage({"okay": true})
+    sendMessage({"okay": True})
 
   else:
     sendMessage({"knownFailure": "UNKNOWN_WHEN_TO_HIDE"})
