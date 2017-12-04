@@ -49,7 +49,9 @@ try:
   gdk_window = GdkX11.X11Window.foreign_new_for_display(gdk_display, ffPid)
 
   if received["whenToHideTitleBar"] == "always":
+    size = (gdk_window.get_width(), gdk_window.get_height())
     Gdk.Window.set_decorations(gdk_window, Gdk.WMDecoration.BORDER)
+    Gdk.Window.resize(gdk_window, size[0], size[1])
     Gdk.Window.process_all_updates()
     sendMessage({"okay": true})
 
