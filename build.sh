@@ -25,8 +25,10 @@ cp native/control             ${TMPFILE}/DEBIAN/
 dpkg-deb --build ${TMPFILE} native/hide-title-bar-for-firefox.deb
 rm -rf ${TMPFILE}
 
+heading "Running tests"
+jshint --config test/jshintrc background.js || exit
+
 heading "Building WebExtension"
 # Files not distributed:
- # Build script is provided to reviewers separately
  # native/control gets put into the .deb without modification
-web-ext build --ignore-files build.sh native/control
+web-ext build --ignore-files build.sh native/control test
