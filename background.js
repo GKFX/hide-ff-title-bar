@@ -15,7 +15,7 @@ function doNative(whenToHideTitleBar) {
         browser.storage.local.set({errorText: "UNKNOWN_FAILURE:" + response.unknownFailure});
       } else {
         browser.storage.local.set({errorText: "RESPONSE_NOT_UNDERSTOOD:" +
-          JSON.stringify(response));
+          JSON.stringify(response)});
         console.log(response);
       }
     },  failure => {
@@ -32,4 +32,10 @@ browser.storage.onChanged.addListener((changes, areaName) => {
   if ("whenToHideTitleBar" in changes) {
     doNative(changes.whenToHideTitleBar.newValue);
   }
+});
+
+browser.windows.onCreated.addListener((window) => {
+  browser.storage.local.get({ whenToHideTitleBar: "always" }).then(
+    prefs => doNative(prefs.whenToHideTitleBar)
+  );
 });
