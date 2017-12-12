@@ -112,12 +112,13 @@ def send_message(content):
 
 def decorate_window(window, decoration):
     """Decorates the respective window using Gdk."""
-
     gdk_display = GdkX11.X11Display.get_default()
     Gdk.Window.process_all_updates()
     gdk_window = GdkX11.X11Window.foreign_new_for_display(
         gdk_display, window.id)
+    width, height = (gdk_window.get_width(), gdk_window.get_height())
     Gdk.Window.set_decorations(gdk_window, decoration)
+    Gdk.Window.resize(gdk_window, width, height)
     Gdk.Window.process_all_updates()
 
 
