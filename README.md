@@ -2,7 +2,7 @@
 
 This WebExtension has been retired. It is really beyond the scope of what a WebExtension can do; APIs used by HTitle are gone and workarounds aren't really there. Specifically, the lack of window controls would always have remained an unsolved problem. I could have continued to pile hacks upon bodges, but in practice this project would never really have become particularly stable or reliable.
 
-Mozilla are working on doing this properly — it's [bug 1417933](https://bugzilla.mozilla.org/show_bug.cgi?id=1417933) if you want an idea of progress. Ultimately it makes far more sense simply to wait for this to be released.
+Mozilla are working on doing this properly — it's [bug 1283299](https://bugzilla.mozilla.org/show_bug.cgi?id=1283299) if you want an idea of progress. Ultimately it makes far more sense simply to wait for this to be released.
 
 Many thanks to everyone who commented and submitted code.
 
