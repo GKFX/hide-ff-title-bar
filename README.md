@@ -1,21 +1,27 @@
-# Hide Title Bar
+# Retired
 
-An addon for Firefox, compatible with GTK 3.
+This WebExtension has been retired. It is really beyond the scope of what a WebExtension can do; APIs used by HTitle are gone and workarounds aren't really there. Specifically, the lack of window controls would always have remained an unsolved problem. I could have continued to pile hacks upon bodges, but in practice this project would never really have become particularly stable or reliable.
 
-## Build
-```bash
-./build.sh
-```
+Mozilla are working on doing this properly — it's [bug 1417933](https://bugzilla.mozilla.org/show_bug.cgi?id=1417933) if you want an idea of progress. Ultimately it makes far more sense simply to wait for this to be released.
 
-## Install
-Unsigned versions can only be installed on developer editions of Firefox, or temporarily through `about:debugging`.
+Many thanks to everyone who commented and submitted code.
 
-Releases are at https://addons.mozilla.org/en-US/firefox/addon/hide-title-bar/.
+George.
 
-The native script can be installed by hand or through a Debian package; these are both accessed from within the add-on.
-
-An Arch Linux package for the native script exists at https://aur.archlinux.org/pkgbase/hide-ff-title-bar-git/. *This package was produced by a third party so I cannot accept responsibility for its contents.*
-
-## Contribute
-* Indents are two spaces.
-* Make a pull request!
+># Hide Title Bar
+>
+>An addon for Firefox, compatible with GTK 3.
+>
+>## Build
+>```bash
+>./build.sh
+>```
+>
+>## Install
+>Unsigned versions can only be installed on developer editions of Firefox, or temporarily through `about:debugging`.
+>
+>Releases are at https://addons.mozilla.org/en-US/firefox/addon/hide-title-bar/.
+>
+>The native script can be installed by hand or through a Debian package; these are both accessed from within the add-on.
+>
+>An Arch Linux package for the native script exists at https://aur.archlinux.org/pkgbase/hide-ff-title-bar-git/. *This package >was produced by a third party so I cannot accept responsibility for its contents.*
