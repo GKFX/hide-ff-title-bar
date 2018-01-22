@@ -16,8 +16,6 @@ from os import linesep
 from struct import pack, unpack
 from subprocess import DEVNULL, CalledProcessError, check_output
 from sys import stdin, stdout, exit
-from threading import Thread
-from time import sleep
 
 from gi import require_version
 require_version('Gdk', '3.0')
@@ -27,8 +25,6 @@ from gi.repository import Gdk, GdkX11
 
 
 PROC_NAME = 'firefox'
-INTERVAL = 1    # Interval in seconds for continuous decoration.
-CONTINUOUS = False  # Flag for continuous decorations (experimental).
 LOGFILE = '/tmp/hide-ff-title-bar.log'
 LOGGING = False      # Enable for debugging only!
 
@@ -117,7 +113,9 @@ def decorate_window(window, decoration):
     Gdk.Window.process_all_updates()
     gdk_window = GdkX11.X11Window.foreign_new_for_display(
         gdk_display, window.id)
+    width, height = (gdk_window.get_width(), gdk_window.get_height())
     Gdk.Window.set_decorations(gdk_window, decoration)
+    Gdk.Window.resize(gdk_window, width, height)
     Gdk.Window.process_all_updates()
 
 
@@ -130,24 +128,7 @@ def decorate_windows(proc_name, decoration):
             decorate_window(window, decoration)
 
 
-def continuous_decoration(proc_name, decoration, interval=INTERVAL):
-    """Continuously decorates the repecive process'
-    window for windows opened later on.
-    """
-
-    def loop():
-        """Loops continuous windows decoration."""
-        while True:
-            log('Decorating windows...')
-            decorate_windows(proc_name, decoration)
-            sleep(interval)
-
-    thread = Thread(target=loop, daemon=True)
-    thread.start()
-    return thread
-
-
-def hide_title_bar(proc_name, when_to_hide_title_bar, continuous=CONTINUOUS):
+def hide_title_bar(proc_name, when_to_hide_title_bar):
     """Conditionally hide title bar of the respective process."""
 
     result = None
@@ -162,11 +143,7 @@ def hide_title_bar(proc_name, when_to_hide_title_bar, continuous=CONTINUOUS):
         decoration = Gdk.WMDecoration.ALL
         result = True
 
-    if continuous:
-        continuous_decoration(proc_name, decoration).join()
-    else:
-        decorate_windows(proc_name, decoration)
-
+    decorate_windows(proc_name, decoration)
     return result
 
 
